@@ -1,1 +1,1 @@
-=ARRAYFORMULA(IF(B2:B<>"", IF(TODAY() - B2:B > 180, "6Th", ""), ""))
+=ARRAYFORMULA(IF(A2:A<>"", IF(TODAY() - A2:A > 180, "6TH", ""), ""))
