@@ -1,0 +1,1 @@
+=ARRAYFORMULA(IF(A2:A<>"", TODAY() - A2:A, ""))
