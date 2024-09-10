@@ -1,0 +1,69 @@
+function mergeDocsWithSamePrefixInFolder() {
+  var sourceFolderId = '17onQOE262zw-F467ZCN2AFQOYBhPINBM'; // Source Google Drive Folder ID
+  var destinationFolderId = '1gu7nAmH2fMMe85g0PaaGg0VZUi8L4a2K'; // Destination Google Drive Folder ID
+  
+  var sourceFolder = DriveApp.getFolderById(sourceFolderId);
+  var destinationFolder = DriveApp.getFolderById(destinationFolderId);
+  var files = sourceFolder.getFiles();
+  
+  var filesByPrefix = {};
+
+  // Group files by prefix (excluding the number suffix)
+  while (files.hasNext()) {
+    var file = files.next();
+    var name = file.getName();
+    var match = name.match(/^(.*?)(\d+)$/);
+    
+    if (match) {
+      var prefix = match[1].trim();
+      // Create an array for each prefix
+      if (!filesByPrefix[prefix]) {
+        filesByPrefix[prefix] = [];
+      }
+      filesByPrefix[prefix].push(file);
+    }
+  }
+  
+  // Merge files with the same prefix
+  for (var prefix in filesByPrefix) {
+    if (filesByPrefix[prefix].length > 0) {
+      try {
+        // Create a new document to store the merged content
+        var mergedDoc = DocumentApp.create(prefix + '_Merged');
+        var mergedDocId = mergedDoc.getId();
+        var mergedBody = mergedDoc.getBody();
+        
+        // Sort files by their numbered suffix
+        filesByPrefix[prefix].sort(function(a, b) {
+          var aSuffix = parseInt(a.getName().match(/(\d+)$/)[0]);
+          var bSuffix = parseInt(b.getName().match(/(\d+)$/)[0]);
+          return aSuffix - bSuffix;
+        });
+        
+        // Append content from each document
+        filesByPrefix[prefix].forEach(function(file) {
+          try {
+            var doc = DocumentApp.openById(file.getId());
+            var docBody = doc.getBody();
+            mergedBody.appendParagraph(docBody.getText());
+            mergedBody.appendPageBreak(); // Optional: adds a page break between docs
+            
+            // Delete the original file after merging
+            file.setTrashed(true); // Moves the file to the trash
+          } catch (e) {
+            Logger.log('Error processing file: ' + file.getName() + ' - ' + e.message);
+          }
+        });
+        
+        // Move the merged document to the destination folder
+        var mergedFile = DriveApp.getFileById(mergedDocId);
+        destinationFolder.addFile(mergedFile); // Add to destination folder
+        DriveApp.getRootFolder().removeFile(mergedFile); // Remove from root drive
+        
+        Logger.log('Merged document created, moved to destination folder, and original files deleted for prefix: ' + prefix);
+      } catch (e) {
+        Logger.log('Error creating merged document for prefix: ' + prefix + ' - ' + e.message);
+      }
+    }
+  }
+}
