@@ -40,13 +40,23 @@ function mergeDocsWithSamePrefixInFolder() {
           return aSuffix - bSuffix;
         });
         
-        // Append content from each document
-        filesByPrefix[prefix].forEach(function(file) {
+        // Append content from each document with two line breaks after each part
+        filesByPrefix[prefix].forEach(function(file, index) {
           try {
             var doc = DocumentApp.openById(file.getId());
-            var docBody = doc.getBody();
-            mergedBody.appendParagraph(docBody.getText());
-            mergedBody.appendPageBreak(); // Optional: adds a page break between docs
+            var docBody = doc.getBody().getText();
+
+            // Remove multiple consecutive blank lines (replace two or more newlines with a single newline)
+            var cleanedBody = docBody.replace(/\n\s*\n\s*\n+/g, '\n\n');
+
+            // Append cleaned content to the merged document
+            mergedBody.appendParagraph(cleanedBody);
+
+            // Add two line breaks between document parts, except after the last part
+            if (index < filesByPrefix[prefix].length - 1) {
+              mergedBody.appendParagraph(''); // First line break
+              mergedBody.appendParagraph(''); // Second line break
+            }
             
             // Delete the original file after merging
             file.setTrashed(true); // Moves the file to the trash
@@ -67,3 +77,4 @@ function mergeDocsWithSamePrefixInFolder() {
     }
   }
 }
+
