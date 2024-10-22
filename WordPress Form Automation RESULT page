@@ -1,1 +1,165 @@
+// Should add to wordpress theme editor *** Functions.php//
+----------------------------------------------------------------------------------
+
+add_action('rest_api_init', function () {
+    register_rest_route('fittalent/v1', '/chatgpt-response/', array(
+        'methods' => 'POST',
+        'callback' => 'get_chatgpt_response',
+    ));
+});
+
+
+
+
+
+function get_chatgpt_response(WP_REST_Request $request) {
+    $data = $request->get_json_params();
+    $response = array();
+    
+    if (isset($data['informe'])) {
+        $response['informe'] = sanitize_text_field($data['informe']);
+    }
+    
+    if (isset($data['google_doc_content'])) {
+        $response['google_doc_content'] = sanitize_textarea_field($data['google_doc_content']);
+    }
+    
+    return new WP_REST_Response($response, 10);
+}
+
+
+
+
+function display_latest_private_post() {
+    // Start output buffering
+    ob_start();
+    ?>
+    
+    <style>
+        /* Style for the loading spinner */
+        .loading-spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <div id="loading-message">
+        <div class="loading-spinner"></div>
+        <h2>Procesando su solicitud...</h2>
+        <p>Espere mientras generamos su respuesta.</p>
+    </div>
+
+    <div id="results-content" style="display: none;">
+        <h2>Tu respuesta:</h2>
+        <div id="chatgpt-response"></div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Delay for 7 seconds (7000 milliseconds)
+        setTimeout(function() {
+            // Fetch the latest private post using AJAX
+            fetch("<?php echo admin_url('admin-ajax.php?action=get_latest_private_post'); ?>")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Display the post content
+                        document.getElementById("chatgpt-response").innerHTML = data.content;
+                    } else {
+                        document.getElementById("chatgpt-response").innerHTML = "No private posts found.";
+                    }
+
+                    // Hide the loading message and show results
+                    document.getElementById("loading-message").style.display = "none";
+                    document.getElementById("results-content").style.display = "block";
+                })
+                .catch(error => {
+                    console.error('Error fetching the private post:', error);
+                    document.getElementById("chatgpt-response").innerHTML = "Error loading the post.";
+                    document.getElementById("loading-message").style.display = "none";
+                    document.getElementById("results-content").style.display = "block";
+                });
+        }, 20000); // 7-second delay
+    });
+    </script>
+
+    <?php
+
+    return ob_get_clean();
+}
+add_shortcode('show_private_post', 'display_latest_private_post');
+
+// AJAX function to get the latest private post
+function get_latest_private_post() {
+    // Fetch the latest private post
+    $args = array(
+        'post_type'      => 'post',
+        'posts_per_page' => 1,
+        'post_status'    => 'private', // Only fetch private posts
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $latest_private_post = new WP_Query($args);
+
+    if ($latest_private_post->have_posts()) {
+        while ($latest_private_post->have_posts()) {
+            $latest_private_post->the_post();
+            // Return the content as JSON
+            $response = array(
+                'success' => true,
+                'content' => apply_filters("the_content", get_the_content()), // Process content
+            );
+        }
+        wp_reset_postdata(); // Reset the global post data
+    } else {
+        // No private posts found
+        $response = array('success' => false);
+    }
+
+    wp_send_json($response); // Send JSON response
+}
+add_action('wp_ajax_get_latest_private_post', 'get_latest_private_post');
+add_action('wp_ajax_nopriv_get_latest_private_post', 'get_latest_private_post');
+
+function disable_comments_on_results_page() {
+    // Check if it's the specific page (ID 548)
+    if (is_page(548)) {
+        // Disable comment template for this page
+        remove_action('wp_footer', 'comments_template');
+        remove_action('wp_head', 'feed_links_extra', 3); // Remove comment-related feeds
+    }
+}
+add_action('wp', 'disable_comments_on_results_page');
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+// Should add to wordpress result page*** where you want to show the ChatGPT response//
+-------------------------------------------
+
+[show_private_post]
+
+-------------------------------------------
+
+
+
+
+
+
 
