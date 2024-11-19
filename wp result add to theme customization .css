@@ -1,0 +1,28 @@
+.pdf-results {
+    margin: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.pdf-item {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.pdf-item h3 {
+    margin: 0 0 10px;
+}
+
+.pdf-item a {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.pdf-item a:hover {
+    text-decoration: underline;
+}
+
