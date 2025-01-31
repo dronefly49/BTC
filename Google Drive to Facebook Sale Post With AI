@@ -1,1 +1,50 @@
+Best eCommerce Solution | Google Drive to Facebook Sale Post With AI Gemini | 31 January 2025
+
+
+STEPS:
+
+1. Use free zapier which will give 100 tasks
+2. Download your product image ( “ KIDS GPS Watch , Price- 1200 TK “ )
+3. First Zap- [ Google Drive to Google Sheet ]
+		  
+—-30 Post / Month GEMINI -------------------------------------------------------------- 
+
+		=GEMINI("Generate a 40-word Bangla Facebook sale post in the following structured format:
+[Icon based on product] **[বাংলা প্রোডাক্ট নাম - unique 6 word title] – [
+{{ ZAPIER send TiTLE }} Didn't add the price and .jpg or .png extension on post] (A Grade) in Bangladesh** | 🔔 সীমিত সময়ের অফার! 🔥
+
+আমরা **Electrobaz** – শুধুমাত্র A Grade পণ্য বিক্রি করি!
+👇👇👇
+
+🔥 [ Product Name on English ] (A Grade) 🔥
+
+💰 **Sale Price ( মূল্য ):** ৳[Discounted Price]
+
+
+✨ **A Grade পণ্যের বিশেষ বৈশিষ্ট্যসমূহ:**
+✅ [Feature 1]
+✅ [Feature 2]
+✅ [Feature 3]
+✅ [Feature 4]
+
+🛒 বিস্তারিত জানতে মেসেজ করুন
+
+📞 WhatsApp: https://wa.me/8801721820184 
+🌐 Visit: www.electrobaz.com
+
+5 best hashtags ( 5 english + 5 bangla ) based on product category for facebook
+
+📝 **Requirements:**
+- Keep spacing, formatting, and styling user-friendly.
+- Automatically generate the Bangla title and price based on the given English product name and price.
+- Ensure posts are engaging and ready to post on Facebook.")  
+
+
+—---------------------------------------------------
+
+4. Google Sheet Auto Copy Colun B to Column D 
+
+=ARRAYFORMULA(IF(B:B<>"", B:B, ""))
+
+5. Second Zap- [ Google Sheet to Facebook Page Post ]
 
