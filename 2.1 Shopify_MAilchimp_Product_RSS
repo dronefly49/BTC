@@ -1,3 +1,43 @@
+Automate the weekly rotation of products from your Shopify collection, ensuring that only new or recently picked products are featured. This process will dynamically manage the product selection while keeping track of when each product was picked.
+
+Steps Involved:
+Sheet Setup: ✅ Sheet1 - This sheet is used to pull product data from Shopify via the API.
+✅ Sheet2 - Stores picked product information with columns: ID, Product Name, Status, and Week Picked (with Date).
+
+Header Preservation: ✅ Ensures that the header in Sheet2 (ID, Product name, Status, Week on Month with date) stays intact and is never removed during function runs.
+
+Product Filtering: ✅ Filters out products already listed in Sheet2 to ensure only new products are considered.
+✅ Only picks a new product that hasn't been picked recently.
+
+Product Selection Logic: ✅ If a product already exists in Sheet2, it will be picked again only if 28 days (4 weeks) have passed since it was last selected.
+✅ This prevents repetitive product selection in consecutive weeks.
+
+Product Rotation: ✅ The script selects one product per week and updates Sheet2 with the product's data.
+✅ It also records the date it was picked, ensuring proper tracking for future selections.
+
+Automatic Data Sync: ✅ The script fetches data from Shopify, checks for new products, and updates the sheets dynamically each week.
+✅ It ensures that no product is picked too soon and provides a consistent rotation of products over time.
+
+Mailchimp Integration: ✅ The most recent product is displayed in Mailchimp, using RSS Feed merge tags to automatically pull the latest product data and show only the most recent entry in the newsletter.
+
+This project automates your product rotation process, ensuring variety and dynamic updates in your Shopify collection, Google Sheets, and Mailchimp, with minimal manual intervention.
+
+
+
+********************
+Got it! Here’s what the improved script will do:
+ ✅ Ensures Sheet2 header stays intact (never removed)
+ ✅ Filters products before picking
+ ✅ Only adds a new product if it's not in Sheet2 already OR if it was last picked 28 days (4 weeks) ago
+ ✅ Picks only 1 product per function run
+
+
+
+
+// Google Apps Script Code:
+-----------------------------------
+
+
 
 // Shopify API Credentials
 const SHOPIFY_STORE = "store name"; // Example: myshop
