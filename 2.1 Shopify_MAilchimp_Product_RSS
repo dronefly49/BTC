@@ -34,6 +34,70 @@ Got it! Here’s what the improved script will do:
 
 
 
+// Shopify Collection Name: " RSS-Mailchimp "
+// Collection RSS feed link: " www.website.com/collections/RSS-Mailchimp.atom " [ worked at mailchimp rss feed link ]
+
+
+// RSS mailchimp dynamic code:
+
+++++++++++++++++++++++++
+
+<h2 style="text-align: left;">&nbsp;</h2>
+
+<h3 style="text-align: left;"><a href="*|RSSITEM:URL|*" target="_blank">*|RSSITEM:TITLE|*</a></h3>
+
+<h2 style="text-align: left;"><em>By *|RSSITEM:AUTHOR|* on *|RSSITEM:DATE|*</em></h2>
+
+<h2 style="text-align: left;">*|RSSITEM:CONTENT_FULL|*</h2>
+
+<h2 style="text-align: center;"><a href="*|RSSITEM:URL|*" target="_blank">Read in browser &raquo;</a><br />
+*|RSSITEM:TWITTER|* *|RSSITEM:LIKE|*<br />
+<br />
+*|END:RSSITEMS|*</h2>
+
+<div style="text-align: center;">&nbsp;</div>
+
+<h3 style="text-align: center;">Best Selling:</h3>
+
+<hr style="width: 5%;border:none; background:#fff;height:5px" />
+<h2 dir="ltr" style="text-align: center;"><a href="*|CART:URL|*" target="_blank">*|RSS:RECENT|*</a></h2>
+
+<h2 dir="ltr" style="text-align: center;">&nbsp;</h2>
+
+
++++++++++++++++++++++++++
+
+<style type="text/css">/* Ensure all text is left-aligned */
+        
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0px;
+            padding: 0;
+        }
+
+
+    	    h1, h2, h3, p, {
+            text-align: left !important;
+            margin: 0;
+            padding:0;
+        }
+
+        /* Ensure full-width product image */
+        .product-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+          td {
+    vertical-align: middle;
+    
+  }
+</style>
+
+++++++++++++++++++++++++++++++++++++++++++
+
 // Google Apps Script Code:
 -----------------------------------
 
