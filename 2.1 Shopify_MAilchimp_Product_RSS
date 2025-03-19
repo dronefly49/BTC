@@ -1,0 +1,166 @@
+
+// Shopify API Credentials
+const SHOPIFY_STORE = "store name"; // Example: myshop
+const API_KEY = "custom app";
+const PASSWORD = "admin api access token";
+const COLLECTION_ID = "edit a collection"; // Find collection ID from Shopify admin
+
+// Google Sheets Names
+const PRODUCT_SHEET = "Sheet1";
+const PICKED_SHEET = "Sheet2";
+
+/**
+ * Fetch all products from Shopify collection and update Google Sheets without removing old pick data.
+ */
+function fetchShopifyProducts() {
+  var productSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PRODUCT_SHEET);
+  var pickedSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PICKED_SHEET);
+
+  if (!productSheet) {
+    productSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(PRODUCT_SHEET);
+  } else {
+    productSheet.clear(); // Clear old data before adding new products
+  }
+
+  if (!pickedSheet) {
+    pickedSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(PICKED_SHEET);
+    pickedSheet.appendRow(["ID", "Product Name", "Status", "Week Picked"]);
+  }
+
+  productSheet.appendRow(["Product ID", "Title", "Status", "Last Updated"]);
+
+  var url = `https://${SHOPIFY_STORE}.myshopify.com/admin/api/2024-01/products.json?collection_id=${COLLECTION_ID}&limit=50`;
+  var options = {
+    "method": "GET",
+    "headers": {
+      "Authorization": "Basic " + Utilities.base64Encode(API_KEY + ":" + PASSWORD),
+      "Content-Type": "application/json"
+    }
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(url, options);
+    var json = JSON.parse(response.getContentText());
+    var products = json.products;
+
+    if (products.length === 0) {
+      Logger.log("No products found in this collection.");
+      return;
+    }
+
+    products.forEach(product => {
+      productSheet.appendRow([
+        product.id,
+        product.title,
+        product.status,
+        product.updated_at
+      ]);
+    });
+
+    Logger.log("Products fetched and updated.");
+  } catch (error) {
+    Logger.log("Error fetching products: " + error);
+  }
+}
+
+/**
+ * Picks a product that hasn't been picked in the last 4 weeks (28 days), sets it to draft for 20 seconds, then reactivates it.
+ */
+function updateRandomProductStatus() {
+  var productSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PRODUCT_SHEET);
+  var pickedSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PICKED_SHEET);
+
+  if (!productSheet || !pickedSheet) {
+    Logger.log("One of the sheets is missing.");
+    return;
+  }
+
+  var products = productSheet.getDataRange().getValues();
+  var pickedData = pickedSheet.getDataRange().getValues();
+
+  var pickedIDs = pickedData.slice(1).map(row => row[0]); // Extract already picked product IDs
+  var today = new Date();
+  
+  // Filter out products already picked in the last 28 days
+  var eligibleProducts = products.slice(1).filter(product => {
+    var productId = product[0];
+    var lastPickedRow = pickedData.find(row => row[0] == productId);
+
+    if (!lastPickedRow) return true; // If product never picked, it's eligible
+
+    var lastPickedDate = new Date(lastPickedRow[3]); // "Week Picked" column
+    var daysSinceLastPicked = (today - lastPickedDate) / (1000 * 60 * 60 * 24);
+
+    return daysSinceLastPicked >= 28; // Only pick if last picked at least 28 days ago
+  });
+
+  if (eligibleProducts.length === 0) {
+    Logger.log("No new eligible products found.");
+    return;
+  }
+
+  // Pick 1 random product
+  var randomIndex = Math.floor(Math.random() * eligibleProducts.length);
+  var selectedProduct = eligibleProducts[randomIndex];
+  var productId = selectedProduct[0];
+  var productName = selectedProduct[1];
+  var productStatus = selectedProduct[2];
+  var pickedDate = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+  Logger.log("Updating product: " + productId);
+
+  setProductStatus(productId, "draft");
+
+  Utilities.sleep(20000); // Wait for 20 seconds
+
+  setProductStatus(productId, "active");
+
+  // Append the new product to Sheet2
+  pickedSheet.appendRow([productId, productName, productStatus, pickedDate]);
+}
+
+/**
+ * Sets a product's status (draft or active) in Shopify
+ */
+function setProductStatus(productId, status) {
+  var url = `https://${SHOPIFY_STORE}.myshopify.com/admin/api/2024-01/products/${productId}.json`;
+  var payload = JSON.stringify({ product: { id: productId, status: status } });
+
+  var options = {
+    "method": "PUT",
+    "headers": {
+      "Authorization": "Basic " + Utilities.base64Encode(API_KEY + ":" + PASSWORD),
+      "Content-Type": "application/json"
+    },
+    "payload": payload
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(url, options);
+    Logger.log(`Product ${productId} set to ${status}`);
+  } catch (error) {
+    Logger.log("Error updating product status: " + error);
+  }
+}
+
+/**
+ * Creates a weekly trigger to update a product
+ */
+function setupTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() == "updateRandomProductStatus") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  ScriptApp.newTrigger("updateRandomProductStatus")
+    .timeBased()
+    .everyWeeks(1)
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(10) // Adjust time as needed
+    .create();
+
+  Logger.log("Weekly trigger set up.");
+}
+
