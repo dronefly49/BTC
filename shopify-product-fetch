@@ -1,0 +1,91 @@
+
+
+function fetchShopifyProducts() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
+  var shopifyUrl = "https://storename.myshopify.com/admin/api/2024-01/products.json?limit=50";
+  var accessToken = "custom app will provide";  // Replace with your actual Admin API Token
+
+  var options = {
+    "method": "get",
+    "headers": {
+      "X-Shopify-Access-Token": accessToken,
+      "Content-Type": "application/json"
+    }
+  };
+
+  try {
+    sheet.clear();
+    sheet.appendRow([
+      "Product ID", "Title", "SKU", "Price", "Stock", "Status", 
+      "Image URL", "Category", "Collection", "Tags", "Type", "Description"
+    ]);
+
+    var productCount = 0;
+    var nextPageUrl = shopifyUrl;
+
+    while (nextPageUrl) {
+      var response = UrlFetchApp.fetch(nextPageUrl, options);
+      var data = JSON.parse(response.getContentText()).products;
+
+      data.forEach(function (product) {
+        var imageUrl = product.images && product.images.length > 0 ? product.images[0].src : "N/A";
+        var category = product.product_type || "N/A";
+        var type = product.product_type || "N/A";
+        var description = stripHtmlTags(product.body_html) || "N/A";
+        var collectionTitle = product.collections && product.collections.length > 0 
+                              ? product.collections[0].title 
+                              : "N/A";
+
+        product.variants.forEach(function (variant) {
+          sheet.appendRow([
+            product.id,
+            product.title,
+            variant.sku,
+            variant.price,
+            variant.inventory_quantity,
+            "Pending",
+            imageUrl,
+            category,
+            collectionTitle,   // ✅ Correct collection data added
+            product.tags || "N/A",
+            type,
+            description
+          ]);
+        });
+
+        productCount++;
+      });
+
+      // Pagination logic to get the next page
+      const linkHeader = response.getHeaders()['Link'];
+      nextPageUrl = extractNextPageUrl(linkHeader);  // ✅ Extracts the next page URL
+
+      if (!nextPageUrl) break; // Stop when no next page is found
+    }
+
+    Logger.log(`✅ Total Products Added: ${productCount}`);
+
+  } catch (error) {
+    Logger.log("❌ Error: " + error.message);
+    SpreadsheetApp.getUi().alert("Error: " + error.message);
+  }
+}
+
+// ✅ Helper Function to Strip HTML Tags
+function stripHtmlTags(html) {
+  if (!html) return "";
+  return html.replace(/<[^>]+>/g, "").trim();
+}
+
+// ✅ Extracts the 'next' page URL from Shopify's Link Header
+function extractNextPageUrl(linkHeader) {
+  if (!linkHeader) return null;
+
+  const links = linkHeader.split(',').map(link => link.trim());
+  for (let link of links) {
+    if (link.includes('rel="next"')) {
+      return link.match(/<(.*?)>/)[1];
+    }
+  }
+  return null;
+}
